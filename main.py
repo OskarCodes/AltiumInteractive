@@ -25,9 +25,12 @@ from ezdxf.math import Vector, Z_AXIS
 from ezdxf.render import MeshBuilder, TraceBuilder, Path
 from ezdxf import reorder
 
+# Replace the variables below with the file paths you are using
 projectname = 'SDSense'
 csvdir = 'C:/Users/Public/Documents/Altium/Projects/' + projectname + '/Project Outputs for ' + projectname + '/Pick Place for ' + projectname + '.csv'
 dxfdir = 'C:/Users/Public/Documents/Altium/Projects/' + projectname + '/' + projectname + '.dxf'
+
+# What row the data starts in the P&P CSV file... Really bad way of doing it but I'm just testing around here =)
 startrow = 14
 render_layers = ['Mechanical1', 'Mechanical5', 'Mechanical15', 'Mechanical16', 'Mechanical42']
 
@@ -42,6 +45,7 @@ msp = doc.modelspace()
 
 
 def getCentres():
+    # This gets the centres of each component from the P&P CSV. No usage of this as of yet though
     xval = []
     yval = []
     with open(csvdir, newline='') as parameters:
@@ -58,6 +62,7 @@ def getCentres():
 
 
 def linedrawer(painter, scaler, boardlen, boardwid):
+    # Right now this is disabled as I am just testing the Hatch drawing
     """for e in msp:
         print(e.dxftype())"""
     """for e in msp.query("CIRCLE"):
@@ -75,15 +80,16 @@ def linedrawer(painter, scaler, boardlen, boardwid):
             starty = start[1] * scaler
             endx = end[0] * scaler
             endy = end[1] * scaler
-            #painter.drawLine(startx, starty, endx, endy)
+            # Right now this is disabled as I am just testing the Hatch drawing
+            # painter.drawLine(startx, starty, endx, endy)
     for hatch in msp:
         try:
             if hatch.dxftype() == "HATCH" and hatch.dxf.layer in render_layers:
                 ocs = hatch.ocs()
                 for p in hatch.paths:
+                    # For each path of a hatch
                     if p.PATH_TYPE == 'EdgePath':
                         path = Path.from_hatch_edge_path(p, ocs, 0)
-                        # properties = RenderContext.resolve_all(hatch)
                         for counter, vector in enumerate(path.approximate()):
                             if counter == 0:
                                 oldvector = vector
@@ -99,7 +105,7 @@ def linedrawer(painter, scaler, boardlen, boardwid):
     for region in msp:
         try:
             if region.dxftype() == "REGION" and region.dxf.layer in render_layers:
-                print("Yay!")
+                print("REGION found")
         except:
             print("Error!")
             continue
@@ -110,19 +116,29 @@ class App(QWidget):
     def __init__(self):
         super().__init__()
         self.title = 'AltiumInteractive'
+
+        # How many times larger than the board should the window be?
         self.scaler = 25
+
+        # Board dimensions in mm
         self.boardlen = 35
         self.boardwid = 34
+
         self.height = self.boardlen * self.scaler
         self.width = self.boardwid * self.scaler
+
+        # Padding values
         self.left = 10
         self.top = 10
+
         self.xvals = []
         self.yvals = []
         self.initUI()
 
     def initUI(self):
         self.setWindowTitle(self.title)
+
+        # Sets window dimensions to board dimensions multiplied by scaler
         self.setGeometry(self.left, self.top, self.width, self.height)
         self.show()
 
